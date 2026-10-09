@@ -47,6 +47,7 @@ jobs:
             fi
             rm -r "dist/${name}"
           done
+          cp install.sh install.ps1 dist/
           (cd dist && sha256sum * > checksums.txt)
 
       - name: Publish

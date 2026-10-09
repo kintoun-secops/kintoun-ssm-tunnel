@@ -18,13 +18,22 @@
 
 ## 설치
 
-[Releases](https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases) 에서 운영체제에 맞는 압축 파일을 내려받아 풀고 실행합니다.
-같은 릴리스의 `checksums.txt` 로 파일 해시를 확인할 수 있습니다.
-저장소가 비공개이므로 GitHub CLI 로 내려받습니다.
+최신 릴리스를 내려받아 체크섬을 확인하고 설치합니다.
+
+Linux, macOS 는 `~/.local/bin` 에 설치합니다.
 
 ```shell
-gh release download --repo kintoun-secops/kintoun-ssm-tunnel --pattern "*linux_amd64.tar.gz"
+curl -fsSL https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.sh | sh
 ```
+
+Windows 는 `%LOCALAPPDATA%\kintoun-ssm-tunnel` 에 설치하고 사용자 PATH 에 추가합니다.
+
+```powershell
+irm https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.ps1 | iex
+```
+
+`VERSION` 환경 변수로 버전을, `INSTALL_DIR` 로 설치 위치를 바꿀 수 있습니다.
+직접 내려받으려면 [Releases](https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases) 에서 운영체제에 맞는 압축 파일을 받고, 같은 릴리스의 `checksums.txt` 로 해시를 확인합니다.
 
 ## 실행
 
