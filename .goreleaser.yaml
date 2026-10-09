@@ -1,0 +1,81 @@
+version: 2
+
+project_name: kintoun-ssm-tunnel
+
+before:
+  hooks:
+    - go vet ./...
+    - go test ./...
+
+builds:
+  - id: kintoun-ssm-tunnel
+    binary: kintoun-ssm-tunnel
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: true
+    files:
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+  extra_files:
+    - glob: install.sh
+    - glob: install.ps1
+
+release:
+  extra_files:
+    - glob: install.sh
+    - glob: install.ps1
+
+changelog:
+  use: github-native
+
+homebrew_casks:
+  - name: kintoun-ssm-tunnel
+    homepage: https://github.com/kintoun-secops/kintoun-ssm-tunnel
+    binaries:
+      - kintoun-ssm-tunnel
+    directory: Casks
+    repository:
+      owner: kintoun-secops
+      name: kintoun-ssm-tunnel
+      branch: main
+    commit_author:
+      name: github-actions[bot]
+      email: 41898282+github-actions[bot]@users.noreply.github.com
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/kintoun-ssm-tunnel"]
+          end
+
+scoops:
+  - name: kintoun-ssm-tunnel
+    homepage: https://github.com/kintoun-secops/kintoun-ssm-tunnel
+    directory: bucket
+    repository:
+      owner: kintoun-secops
+      name: kintoun-ssm-tunnel
+      branch: main
+    commit_author:
+      name: github-actions[bot]
+      email: 41898282+github-actions[bot]@users.noreply.github.com

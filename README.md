@@ -16,29 +16,82 @@
 | macOS | [설치 안내](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | [설치 안내](https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-macos-overview.html) |
 | Linux | [설치 안내](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | [설치 안내](https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-linux-overview.html) |
 
-## 설치
+## 설치, 업데이트, 삭제
 
-최신 릴리스를 내려받아 체크섬을 확인하고 설치합니다.
+패키지 매니저를 쓰는 방법을 권장합니다. 업데이트와 삭제를 패키지 매니저가 처리합니다.
+
+### macOS: Homebrew
+
+```shell
+# 설치
+brew tap kintoun-secops/ssm https://github.com/kintoun-secops/kintoun-ssm-tunnel
+brew install --cask kintoun-ssm-tunnel
+
+# 업데이트
+brew update
+brew upgrade --cask kintoun-ssm-tunnel
+
+# 삭제
+brew uninstall --cask kintoun-ssm-tunnel
+brew untap kintoun-secops/ssm
+```
+
+### Windows: Scoop
+
+```powershell
+# 설치
+scoop bucket add kintoun https://github.com/kintoun-secops/kintoun-ssm-tunnel
+scoop install kintoun-ssm-tunnel
+
+# 업데이트
+scoop update
+scoop update kintoun-ssm-tunnel
+
+# 삭제
+scoop uninstall kintoun-ssm-tunnel
+scoop bucket rm kintoun
+```
+
+### 설치 스크립트: Linux 및 패키지 매니저를 쓰지 않는 경우
+
+최신 릴리스를 내려받아 체크섬을 확인하고 설치합니다. `VERSION` 환경 변수로 버전을, `INSTALL_DIR` 로 설치 위치를 바꿀 수 있습니다.
 
 Linux, macOS 는 `~/.local/bin` 에 설치합니다. PATH 에 없으면 사용하는 셸에 맞는 `export PATH` 추가 명령을 출력하며, 셸 설정 파일은 직접 수정하지 않습니다.
 
 ```shell
+# 설치와 업데이트: 같은 명령을 다시 실행하면 최신 버전으로 바뀝니다
 curl -fsSL https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.sh | sh
+
+# 삭제: PATH 에 추가한 export 줄이 있으면 셸 설정 파일에서 직접 지웁니다
+rm ~/.local/bin/kintoun-ssm-tunnel
 ```
 
 Windows 는 `%LOCALAPPDATA%\kintoun-ssm-tunnel` 에 설치하고 사용자 PATH 에 추가합니다.
 
 ```powershell
+# 설치와 업데이트: 같은 명령을 다시 실행하면 최신 버전으로 바뀝니다
 irm https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.ps1 | iex
+
+# 삭제: 설치 폴더와 사용자 PATH 항목을 함께 지웁니다
+$dir = "$env:LOCALAPPDATA\kintoun-ssm-tunnel"
+Remove-Item -Recurse -Force $dir
+$paths = [Environment]::GetEnvironmentVariable('Path', 'User') -split ';' | Where-Object { $_ -and $_ -ne $dir }
+[Environment]::SetEnvironmentVariable('Path', ($paths -join ';'), 'User')
 ```
 
-`VERSION` 환경 변수로 버전을, `INSTALL_DIR` 로 설치 위치를 바꿀 수 있습니다.
-직접 내려받으려면 [Releases](https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases) 에서 운영체제에 맞는 압축 파일을 받고, 같은 릴리스의 `checksums.txt` 로 해시를 확인합니다.
+### 내려받은 파일 검증
+
+[Releases](https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases) 에서 직접 내려받은 파일은 같은 릴리스의 `checksums.txt` 로 해시를 확인할 수 있습니다.
+릴리스 파일은 GitHub Actions 에서 빌드되며 빌드 출처 증명이 함께 발급됩니다. 아래 명령으로 이 저장소의 워크플로우에서 만든 파일인지 확인합니다.
+
+```shell
+gh attestation verify <내려받은 파일> --repo kintoun-secops/kintoun-ssm-tunnel
+```
 
 ## 실행
 
 ```shell
-go run .
+kintoun-ssm-tunnel
 ```
 
 1. 프로필을 고릅니다. 목록에 없으면 직접 입력합니다. `default` 프로필은 목록에 나오지 않습니다.
@@ -57,3 +110,12 @@ go run .
 | `velociraptor` | 8889 | 8889 | `https://localhost:8889` |
 
 그 외 인스턴스는 포트를 입력받아 원격과 로컬에 같은 값을 사용합니다.
+
+## 개발
+
+```shell
+go run .
+go test ./...
+```
+
+`v*.*.*` 태그를 push하면 GoReleaser 가 빌드와 릴리스를 만들고, 같은 실행에서 이 저장소의 `Casks/` 와 `bucket/` 에 Homebrew cask 와 Scoop 매니페스트를 커밋합니다.
