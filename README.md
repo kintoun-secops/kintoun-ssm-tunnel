@@ -25,16 +25,21 @@
 ```shell
 # 설치
 brew tap kintoun-secops/ssm https://github.com/kintoun-secops/kintoun-ssm-tunnel
-brew install --cask kintoun-ssm-tunnel
+brew trust --cask kintoun-secops/ssm/kintoun-ssm-tunnel
+brew install --cask kintoun-secops/ssm/kintoun-ssm-tunnel
 
 # 업데이트
 brew update
-brew upgrade --cask kintoun-ssm-tunnel
+brew upgrade --cask kintoun-secops/ssm/kintoun-ssm-tunnel
 
 # 삭제
-brew uninstall --cask kintoun-ssm-tunnel
+brew uninstall --cask kintoun-secops/ssm/kintoun-ssm-tunnel
+brew untrust --cask kintoun-secops/ssm/kintoun-ssm-tunnel
 brew untap kintoun-secops/ssm
 ```
+
+Homebrew 는 공식 tap 이 아닌 cask 를 `brew trust` 로 신뢰하기 전에는 불러오지 않습니다. 신뢰 목록은 `~/.homebrew/trust.json` 에 저장됩니다.
+항상 `kintoun-secops/ssm/` 을 붙인 전체 이름을 사용합니다.
 
 ### Windows: Scoop
 
