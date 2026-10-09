@@ -2,6 +2,7 @@
 
 `SSMPortForward=true` 태그가 붙은 EC2 에 SSM 포트포워딩 터널을 여는 TUI 입니다.
 프로필 선택, `aws login`, 인스턴스 조회, 터널 열기를 한 흐름으로 처리합니다.
+실행 명령은 `ktun` 입니다.
 
 ## 필요한 것
 
@@ -25,35 +26,41 @@
 ```shell
 # 설치
 brew tap kintoun-secops/ssm https://github.com/kintoun-secops/kintoun-ssm-tunnel
-brew trust --cask kintoun-secops/ssm/kintoun-ssm-tunnel
-brew install --cask kintoun-secops/ssm/kintoun-ssm-tunnel
+brew trust --cask kintoun-secops/ssm/ktun
+brew install --cask kintoun-secops/ssm/ktun
 
 # 업데이트
 brew update
-brew upgrade --cask kintoun-secops/ssm/kintoun-ssm-tunnel
+brew upgrade --cask kintoun-secops/ssm/ktun
 
 # 삭제
-brew uninstall --cask kintoun-secops/ssm/kintoun-ssm-tunnel
-brew untrust --cask kintoun-secops/ssm/kintoun-ssm-tunnel
+brew uninstall --cask kintoun-secops/ssm/ktun
+brew untrust --cask kintoun-secops/ssm/ktun
 brew untap kintoun-secops/ssm
 ```
 
 Homebrew 는 공식 tap 이 아닌 cask 를 `brew trust` 로 신뢰하기 전에는 불러오지 않습니다. 신뢰 목록은 `~/.homebrew/trust.json` 에 저장됩니다.
 항상 `kintoun-secops/ssm/` 을 붙인 전체 이름을 사용합니다.
 
+macOS 에서 서명되지 않은 바이너리라는 이유로 실행이 막히면 격리 속성을 제거합니다.
+
+```shell
+xattr -d com.apple.quarantine "$(which ktun)"
+```
+
 ### Windows: Scoop
 
 ```powershell
 # 설치
 scoop bucket add kintoun https://github.com/kintoun-secops/kintoun-ssm-tunnel
-scoop install kintoun-ssm-tunnel
+scoop install ktun
 
 # 업데이트
 scoop update
-scoop update kintoun-ssm-tunnel
+scoop update ktun
 
 # 삭제
-scoop uninstall kintoun-ssm-tunnel
+scoop uninstall ktun
 scoop bucket rm kintoun
 ```
 
@@ -68,17 +75,17 @@ Linux, macOS 는 `~/.local/bin` 에 설치합니다. PATH 에 없으면 사용�
 curl -fsSL https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.sh | sh
 
 # 삭제: PATH 에 추가한 export 줄이 있으면 셸 설정 파일에서 직접 지웁니다
-rm ~/.local/bin/kintoun-ssm-tunnel
+rm ~/.local/bin/ktun
 ```
 
-Windows 는 `%LOCALAPPDATA%\kintoun-ssm-tunnel` 에 설치하고 사용자 PATH 에 추가합니다.
+Windows 는 `%LOCALAPPDATA%\ktun` 에 설치하고 사용자 PATH 에 추가합니다.
 
 ```powershell
 # 설치와 업데이트: 같은 명령을 다시 실행하면 최신 버전으로 바뀝니다
 irm https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.ps1 | iex
 
 # 삭제: 설치 폴더와 사용자 PATH 항목을 함께 지웁니다
-$dir = "$env:LOCALAPPDATA\kintoun-ssm-tunnel"
+$dir = "$env:LOCALAPPDATA\ktun"
 Remove-Item -Recurse -Force $dir
 $paths = [Environment]::GetEnvironmentVariable('Path', 'User') -split ';' | Where-Object { $_ -and $_ -ne $dir }
 [Environment]::SetEnvironmentVariable('Path', ($paths -join ';'), 'User')
@@ -96,7 +103,7 @@ gh attestation verify <내려받은 파일> --repo kintoun-secops/kintoun-ssm-tu
 ## 실행
 
 ```shell
-kintoun-ssm-tunnel
+ktun
 ```
 
 1. 프로필을 고릅니다. 목록에 없으면 직접 입력합니다. `default` 프로필은 목록에 나오지 않습니다.

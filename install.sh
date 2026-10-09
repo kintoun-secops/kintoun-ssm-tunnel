@@ -1,11 +1,11 @@
 #!/bin/sh
-# kintoun-ssm-tunnel 설치 스크립트 (Linux, macOS)
+# ktun 설치 스크립트 (Linux, macOS)
 #   curl -fsSL https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.sh | sh
 # VERSION 으로 버전을, INSTALL_DIR 로 설치 위치를 바꿀 수 있다.
 set -eu
 
 REPO="kintoun-secops/kintoun-ssm-tunnel"
-BIN="kintoun-ssm-tunnel"
+BIN="ktun"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
 fail() {

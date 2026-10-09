@@ -1,6 +1,6 @@
 version: 2
 
-project_name: kintoun-ssm-tunnel
+project_name: ktun
 
 before:
   hooks:
@@ -8,8 +8,8 @@ before:
     - go test ./...
 
 builds:
-  - id: kintoun-ssm-tunnel
-    binary: kintoun-ssm-tunnel
+  - id: ktun
+    binary: ktun
     env:
       - CGO_ENABLED=0
     goos: [linux, darwin, windows]
@@ -49,10 +49,10 @@ changelog:
   use: github-native
 
 homebrew_casks:
-  - name: kintoun-ssm-tunnel
+  - name: ktun
     homepage: https://github.com/kintoun-secops/kintoun-ssm-tunnel
     binaries:
-      - kintoun-ssm-tunnel
+      - ktun
     directory: Casks
     repository:
       owner: kintoun-secops
@@ -61,15 +61,9 @@ homebrew_casks:
     commit_author:
       name: github-actions[bot]
       email: 41898282+github-actions[bot]@users.noreply.github.com
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/kintoun-ssm-tunnel"]
-          end
 
 scoops:
-  - name: kintoun-ssm-tunnel
+  - name: ktun
     homepage: https://github.com/kintoun-secops/kintoun-ssm-tunnel
     directory: bucket
     repository:

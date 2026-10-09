@@ -1,4 +1,4 @@
-# kintoun-ssm-tunnel 설치 스크립트 (Windows)
+# ktun 설치 스크립트 (Windows)
 #   irm https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.ps1 | iex
 # VERSION 으로 버전을, INSTALL_DIR 로 설치 위치를 바꿀 수 있다.
 $ErrorActionPreference = 'Stop'
@@ -6,7 +6,7 @@ $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $repo = 'kintoun-secops/kintoun-ssm-tunnel'
-$bin = 'kintoun-ssm-tunnel'
+$bin = 'ktun'
 $installDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA $bin }
 
 $version = $env:VERSION
