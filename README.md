@@ -8,6 +8,16 @@
 - AWS CLI v2
 - [Session Manager 플러그인](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 
+## 설치
+
+[Releases](https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases) 에서 운영체제에 맞는 압축 파일을 내려받아 풀고 실행합니다.
+같은 릴리스의 `checksums.txt` 로 파일 해시를 확인할 수 있습니다.
+저장소가 비공개이므로 GitHub CLI 로 내려받습니다.
+
+```shell
+gh release download --repo kintoun-secops/kintoun-ssm-tunnel --pattern "*linux_amd64.tar.gz"
+```
+
 ## 실행
 
 ```shell
