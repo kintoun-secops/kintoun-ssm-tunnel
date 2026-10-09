@@ -20,7 +20,7 @@
 
 최신 릴리스를 내려받아 체크섬을 확인하고 설치합니다.
 
-Linux, macOS 는 `~/.local/bin` 에 설치합니다.
+Linux, macOS 는 `~/.local/bin` 에 설치합니다. PATH 에 없으면 사용하는 셸에 맞는 `export PATH` 추가 명령을 출력하며, 셸 설정 파일은 직접 수정하지 않습니다.
 
 ```shell
 curl -fsSL https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/latest/download/install.sh | sh

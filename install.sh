@@ -60,7 +60,31 @@ install -m 755 "$tmp/$name/$BIN" "$INSTALL_DIR/$BIN"
 
 echo "$INSTALL_DIR/$BIN 에 설치했습니다."
 case ":$PATH:" in
-  *":$INSTALL_DIR:"*) ;;
-  *) echo "$INSTALL_DIR 가 PATH 에 없습니다. 셸 설정에 추가하세요." ;;
+  *":$INSTALL_DIR:"*)
+    echo "실행: $BIN"
+    ;;
+  *)
+    case "$(basename "${SHELL:-}")" in
+      zsh) rc="$HOME/.zshrc" ;;
+      bash)
+        rc="$HOME/.bashrc"
+        [ "$os" = "darwin" ] && rc="$HOME/.bash_profile"
+        ;;
+      *) rc="" ;;
+    esac
+
+    echo
+    echo "$INSTALL_DIR 가 PATH 에 없어 아직 $BIN 명령으로 실행할 수 없습니다."
+    if [ -n "$rc" ]; then
+      echo "아래 명령을 한 번 실행한 뒤 터미널을 새로 여세요."
+      echo
+      echo "  echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> $rc"
+    else
+      echo "사용하는 셸의 설정 파일에 아래 줄을 추가한 뒤 터미널을 새로 여세요."
+      echo
+      echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
+    fi
+    echo
+    echo "지금 바로 실행하려면: $INSTALL_DIR/$BIN"
+    ;;
 esac
-echo "실행: $BIN"
