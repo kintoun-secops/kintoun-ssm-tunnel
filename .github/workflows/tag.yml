@@ -1,0 +1,46 @@
+name: Tag
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+      - .goreleaser.yaml
+      - install.sh
+      - install.ps1
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 올릴 버전 자리
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: tag
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Tag and dispatch release
+        env:
+          BUMP: ${{ inputs.bump || 'patch' }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(sh .github/scripts/next-tag.sh "$BUMP")
+          git tag "$tag"
+          git push origin "$tag"
+          gh workflow run release.yml --ref "$tag"
+          echo "릴리스 태그: $tag"

@@ -118,4 +118,12 @@ go run .
 go test ./...
 ```
 
-`v*.*.*` 태그를 push하면 GoReleaser 가 빌드와 릴리스를 만들고, 같은 실행에서 이 저장소의 `Casks/` 와 `bucket/` 에 Homebrew cask 와 Scoop 매니페스트를 커밋합니다.
+## 릴리스
+
+`main` 에 Go 코드(`*.go`, `go.mod`, `go.sum`), `.goreleaser.yaml`, `install.sh`, `install.ps1` 변경이 push되면 `Tag` 워크플로우가 다음 패치 버전 태그(`vX.Y.Z`)를 만들고 `Release` 워크플로우를 실행합니다.
+README 나 워크플로우 파일만 바뀐 경우에는 릴리스가 만들어지지 않습니다.
+
+- minor 나 major 를 올리려면 Actions 의 `Tag` 워크플로우를 수동으로 실행하고 `bump` 를 고릅니다.
+- `v*.*.*` 태그를 직접 push해도 `Release` 워크플로우가 실행됩니다.
+- `Release` 는 GoReleaser 로 빌드와 GitHub 릴리스를 만들고, 같은 실행에서 이 저장소의 `Casks/` 와 `bucket/` 에 Homebrew cask 와 Scoop 매니페스트를 커밋합니다.
+- 워크플로우가 만든 태그는 `push` 이벤트를 발생시키지 않으므로, `Tag` 가 `workflow_dispatch` 로 `Release` 를 직접 호출합니다.
