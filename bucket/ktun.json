@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/download/v0.2.0/ktun_v0.2.0_windows_amd64.zip",
+            "bin": [
+                "ktun_v0.2.0_windows_amd64/ktun.exe"
+            ],
+            "hash": "707c34280ee4e48f15615519cb81f7cd4a4a8359d299cd7c36abfd563fd5671a"
+        }
+    },
+    "homepage": "https://github.com/kintoun-secops/kintoun-ssm-tunnel"
+}
