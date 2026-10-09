@@ -1,0 +1,13 @@
+{
+    "version": "0.1.1",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases/download/v0.1.1/kintoun-ssm-tunnel_v0.1.1_windows_amd64.zip",
+            "bin": [
+                "kintoun-ssm-tunnel_v0.1.1_windows_amd64/kintoun-ssm-tunnel.exe"
+            ],
+            "hash": "9cb3e54801873f68ee03551e3965a06e6a9bb2ff47f13ead3a761401ceb99ce4"
+        }
+    },
+    "homepage": "https://github.com/kintoun-secops/kintoun-ssm-tunnel"
+}
