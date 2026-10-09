@@ -132,10 +132,25 @@ go test ./...
 
 ## 릴리스
 
-`main` 에 Go 코드(`*.go`, `go.mod`, `go.sum`), `.goreleaser.yaml`, `install.sh`, `install.ps1` 변경이 push되면 `Tag` 워크플로우가 다음 패치 버전 태그(`vX.Y.Z`)를 만들고 `Release` 워크플로우를 실행합니다.
+`main` 에 Go 코드(`*.go`, `go.mod`, `go.sum`), `.goreleaser.yaml`, `install.sh`, `install.ps1` 변경이 push되면 `Tag` 워크플로우가 다음 버전 태그(`vX.Y.Z`)를 만들고 `Release` 워크플로우를 실행합니다.
 README 나 워크플로우 파일만 바뀐 경우에는 릴리스가 만들어지지 않습니다.
 
-- minor 나 major 를 올리려면 Actions 의 `Tag` 워크플로우를 수동으로 실행하고 `bump` 를 고릅니다.
+### 버전 올리는 기준
+
+마지막 태그 이후의 커밋 메시지를 모두 보고 가장 높은 단계를 적용합니다.
+
+| 커밋 | 올라가는 자리 | 예 |
+| --- | --- | --- |
+| `feat!:` 처럼 type 뒤에 `!` 가 있거나 본문에 `BREAKING CHANGE:` 가 있음 | major (major 가 0 인 동안은 minor) | 명령 이름 변경, 설정 형식 변경 |
+| `feat:` | minor | 새 기능 |
+| 그 밖의 모든 커밋 (`fix:`, `refactor:`, `perf:`, `docs:`, `ci:`, `chore:` 등) | patch | 버그 수정, 내부 정리 |
+
+- 커밋 메시지는 `type(scope): 설명` 형식을 지킵니다. 형식이 다르면 patch 로 계산됩니다.
+- 기능 추가나 호환성이 깨지는 변경은 `feat:` 나 `feat!:` 로 써야 minor 이상으로 올라갑니다.
+- 기준과 다르게 올리려면 Actions 의 `Tag` 워크플로우를 수동으로 실행하고 `bump` 에 `auto`, `patch`, `minor`, `major` 중 하나를 고릅니다.
+- 계산 규칙은 `.github/scripts/next-tag.sh` 에 있습니다.
+
+### 동작
 - `v*.*.*` 태그를 직접 push해도 `Release` 워크플로우가 실행됩니다.
 - `Release` 는 GoReleaser 로 빌드와 GitHub 릴리스를 만들고, 같은 실행에서 이 저장소의 `Casks/` 와 `bucket/` 에 Homebrew cask 와 Scoop 매니페스트를 커밋합니다.
 - 워크플로우가 만든 태그는 `push` 이벤트를 발생시키지 않으므로, `Tag` 가 `workflow_dispatch` 로 `Release` 를 직접 호출합니다.

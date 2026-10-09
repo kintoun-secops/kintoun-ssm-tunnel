@@ -15,8 +15,8 @@ on:
       bump:
         description: 올릴 버전 자리
         type: choice
-        options: [patch, minor, major]
-        default: patch
+        options: [auto, patch, minor, major]
+        default: auto
 
 permissions:
   contents: write
@@ -36,7 +36,7 @@ jobs:
 
       - name: Tag and dispatch release
         env:
-          BUMP: ${{ inputs.bump || 'patch' }}
+          BUMP: ${{ inputs.bump || 'auto' }}
           GH_TOKEN: ${{ github.token }}
         run: |
           tag=$(sh .github/scripts/next-tag.sh "$BUMP")
