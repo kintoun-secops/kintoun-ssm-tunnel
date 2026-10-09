@@ -5,17 +5,24 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
 
 	"github.com/kintoun-secops/kintoun-ssm-tunnel/internal/aws"
+	"github.com/kintoun-secops/kintoun-ssm-tunnel/internal/install"
 	"github.com/kintoun-secops/kintoun-ssm-tunnel/internal/ui"
 )
 
 func main() {
+	missing := false
 	for _, bin := range []string{"aws", "session-manager-plugin"} {
 		if _, err := exec.LookPath(bin); err != nil {
-			fmt.Fprintf(os.Stderr, "%s 를 찾을 수 없습니다. 설치 후 다시 실행하세요.\n", bin)
-			os.Exit(1)
+			fmt.Fprintln(os.Stderr, install.Hint(bin, runtime.GOOS))
+			missing = true
 		}
+	}
+	if missing {
+		fmt.Fprintln(os.Stderr, "\n설치 후 터미널을 새로 열고 다시 실행하세요.")
+		os.Exit(1)
 	}
 
 	var state ui.State

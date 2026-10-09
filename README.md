@@ -8,6 +8,14 @@
 - AWS CLI v2
 - [Session Manager 플러그인](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 
+둘 중 하나라도 없으면 실행 시 운영체제에 맞는 설치 링크를 출력하고 종료합니다.
+
+| 운영체제 | AWS CLI v2 | Session Manager 플러그인 |
+| --- | --- | --- |
+| Windows | [설치 안내](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | [설치 안내](https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-windows.html) |
+| macOS | [설치 안내](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | [설치 안내](https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-macos-overview.html) |
+| Linux | [설치 안내](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | [설치 안내](https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-linux-overview.html) |
+
 ## 설치
 
 [Releases](https://github.com/kintoun-secops/kintoun-ssm-tunnel/releases) 에서 운영체제에 맞는 압축 파일을 내려받아 풀고 실행합니다.
