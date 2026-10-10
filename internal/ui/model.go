@@ -1,5 +1,6 @@
 // Package ui is the Bubble Tea front end. It never runs the interactive aws commands itself;
 // it returns a Result so the caller can run them with the terminal and signals to itself.
+// Non-interactive calls (listing, power on/off) run as commands inside the TUI.
 package ui
 
 import (
@@ -25,8 +26,8 @@ type Result struct {
 	Profile  string
 	Instance aws.Instance
 	Remote   int
-	Local    int
-	URL      string
+	Scheme   string // non-empty builds a scheme://host:port/path URL; empty prints host:port
+	Path     string
 }
 
 // State carries what the caller keeps between TUI runs.
@@ -42,15 +43,44 @@ const (
 	stProfileInput
 	stChecking
 	stInstances
+	stAction
 	stPort
+	stPowering
 	stError
 )
+
+type actionKind int
+
+const (
+	actTunnel actionKind = iota
+	actStart
+	actStop
+)
+
+type actionItem struct {
+	label string
+	kind  actionKind
+}
+
+// actionsFor lists what can be done to an instance in the given power state. While an instance
+// is transitioning there is nothing to do but wait, so the list is empty.
+func actionsFor(state string) []actionItem {
+	switch state {
+	case "running":
+		return []actionItem{{"터널 열기", actTunnel}, {"중지", actStop}}
+	case "stopped":
+		return []actionItem{{"시작", actStart}}
+	default:
+		return nil
+	}
+}
 
 type checkMsg struct{ err error }
 type instancesMsg struct {
 	list []aws.Instance
 	err  error
 }
+type powerMsg struct{ err error }
 
 var (
 	titleStyle  = lipgloss.NewStyle().Bold(true)
@@ -64,6 +94,7 @@ type model struct {
 	stage     stage
 	profiles  []string
 	instances []aws.Instance
+	actions   []actionItem
 	cursor    int
 	input     string
 	picked    aws.Instance
@@ -107,9 +138,17 @@ func checkCmd(profile string) tea.Cmd {
 
 func listCmd(profile string) tea.Cmd {
 	return func() tea.Msg {
-		list, err := aws.PortForwardInstances(profile)
+		list, err := aws.Instances(profile)
 		return instancesMsg{list, err}
 	}
+}
+
+func startCmd(profile, id string) tea.Cmd {
+	return func() tea.Msg { return powerMsg{aws.StartInstance(profile, id)} }
+}
+
+func stopCmd(profile, id string) tea.Cmd {
+	return func() tea.Msg { return powerMsg{aws.StopInstance(profile, id)} }
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -134,6 +173,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.instances, m.cursor, m.stage = msg.list, 0, stInstances
 		return m, nil
+
+	case powerMsg:
+		if msg.err != nil {
+			m.err, m.stage = msg.err, stError
+			return m, nil
+		}
+		// 전원 상태가 바뀌었으니 목록을 다시 불러 반영한다.
+		m.stage = stChecking
+		return m, listCmd(m.state.Profile)
 
 	case tea.KeyMsg:
 		return m.onKey(msg)
@@ -183,6 +231,8 @@ func (m model) listLen() int {
 		return len(m.profiles) + 1
 	case stInstances:
 		return len(m.instances)
+	case stAction:
+		return len(m.actions)
 	}
 	return 0
 }
@@ -190,7 +240,11 @@ func (m model) listLen() int {
 func (m model) back() (tea.Model, tea.Cmd) {
 	m.err, m.input, m.cursor = nil, "", 0
 	switch m.stage {
-	case stInstances, stPort, stError:
+	case stPort:
+		m.stage = stAction
+	case stAction:
+		m.stage = stInstances
+	case stInstances, stError:
 		m.state.Profile, m.state.LoginTried = "", false
 		if len(m.profiles) == 0 {
 			m.stage = stProfileInput
@@ -223,24 +277,47 @@ func (m model) enter() (tea.Model, tea.Cmd) {
 		if len(m.instances) == 0 {
 			return m, nil
 		}
-		inst := m.instances[m.cursor]
-		if p, ok := findPreset(inst.Name); ok {
-			m.result = Result{Action: Connect, Profile: m.state.Profile, Instance: inst, Remote: p.Remote, Local: p.Local, URL: p.URL()}
-			return m, tea.Quit
+		m.picked = m.instances[m.cursor]
+		m.actions, m.cursor, m.stage = actionsFor(m.picked.State), 0, stAction
+		return m, nil
+
+	case stAction:
+		if len(m.actions) == 0 {
+			return m, nil
 		}
-		m.picked, m.stage, m.input = inst, stPort, ""
+		switch m.actions[m.cursor].kind {
+		case actTunnel:
+			return m.openTunnel()
+		case actStart:
+			m.stage = stPowering
+			return m, startCmd(m.state.Profile, m.picked.ID)
+		case actStop:
+			m.stage = stPowering
+			return m, stopCmd(m.state.Profile, m.picked.ID)
+		}
 
 	case stPort:
 		port, ok := aws.ParsePort(strings.TrimSpace(m.input))
 		if !ok {
 			return m, nil
 		}
-		m.result = Result{Action: Connect, Profile: m.state.Profile, Instance: m.picked, Remote: port, Local: port, URL: fmt.Sprintf("localhost:%d", port)}
+		m.result = Result{Action: Connect, Profile: m.state.Profile, Instance: m.picked, Remote: port}
 		return m, tea.Quit
 
 	case stError:
 		return m.back()
 	}
+	return m, nil
+}
+
+// openTunnel finishes the connect flow for the picked instance. A preset fixes the remote
+// port and URL shape; otherwise the user is asked for the remote port.
+func (m model) openTunnel() (tea.Model, tea.Cmd) {
+	if p, ok := findPreset(m.picked.Name); ok {
+		m.result = Result{Action: Connect, Profile: m.state.Profile, Instance: m.picked, Remote: p.Remote, Scheme: p.Scheme, Path: p.Path}
+		return m, tea.Quit
+	}
+	m.stage, m.input = stPort, ""
 	return m, nil
 }
 
@@ -269,32 +346,56 @@ func (m model) View() string {
 		b.WriteString(help("Enter 확인  Esc 뒤로  Ctrl+C 종료"))
 
 	case stChecking:
-		b.WriteString(fmt.Sprintf("%s 자격증명을 확인하고 인스턴스를 조회하는 중...\n", m.state.Profile))
+		b.WriteString(fmt.Sprintf("%s · 인스턴스를 조회하는 중...\n", m.state.Profile))
 
 	case stInstances:
-		b.WriteString(fmt.Sprintf("프로필 %s · 접속할 인스턴스를 선택하세요.\n\n", m.state.Profile))
+		b.WriteString(fmt.Sprintf("프로필 %s · 인스턴스를 선택하세요.\n\n", m.state.Profile))
 		if len(m.instances) == 0 {
-			b.WriteString(dimStyle.Render("SSMPortForward=true 태그가 붙은 실행 중 인스턴스가 없습니다.") + "\n")
+			b.WriteString(dimStyle.Render("SSMPortForward=true 태그가 붙은 인스턴스가 없습니다.") + "\n")
 		}
 		for i, in := range m.instances {
-			note := in.ID
-			if p, ok := findPreset(in.Name); ok {
-				note += "  →  " + p.URL()
-			}
-			b.WriteString(m.row(i, in.Name, note))
+			b.WriteString(m.row(i, in.Name, in.ID+"  ·  "+stateLabel(in.State)))
 		}
-		b.WriteString(help("↑↓ 이동  Enter 터널 열기  Esc 프로필 변경  q 종료"))
+		b.WriteString(help("↑↓ 이동  Enter 선택  Esc 프로필 변경  q 종료"))
+
+	case stAction:
+		b.WriteString(fmt.Sprintf("%s  (%s)\n\n", m.picked.Name, stateLabel(m.picked.State)))
+		if len(m.actions) == 0 {
+			b.WriteString(dimStyle.Render("전환 중이라 지금은 조작할 수 없습니다.") + "\n")
+		}
+		for i, a := range m.actions {
+			b.WriteString(m.row(i, a.label, ""))
+		}
+		b.WriteString(help("↑↓ 이동  Enter 실행  Esc 뒤로  q 종료"))
 
 	case stPort:
-		b.WriteString(fmt.Sprintf("%s 는 기본 포트가 없습니다. 포트를 입력하세요.\n\n", m.picked.Name))
+		b.WriteString(fmt.Sprintf("%s 의 원격 포트를 입력하세요. 로컬 포트는 빈 포트를 자동으로 잡습니다.\n\n", m.picked.Name))
 		b.WriteString("> " + m.input + "█\n")
 		b.WriteString(help("Enter 확인  Esc 뒤로  Ctrl+C 종료"))
+
+	case stPowering:
+		b.WriteString(fmt.Sprintf("%s 의 전원 상태를 바꾸는 중...\n", m.picked.Name))
 
 	case stError:
 		b.WriteString(errStyle.Render(m.err.Error()) + "\n")
 		b.WriteString(help("Enter 또는 Esc 로 프로필 선택으로 돌아가기  q 종료"))
 	}
 	return b.String()
+}
+
+func stateLabel(s string) string {
+	switch s {
+	case "running":
+		return "실행 중"
+	case "stopped":
+		return "중지됨"
+	case "stopping":
+		return "중지하는 중"
+	case "pending":
+		return "시작하는 중"
+	default:
+		return s
+	}
 }
 
 func (m model) row(i int, label, note string) string {

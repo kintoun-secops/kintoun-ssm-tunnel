@@ -42,9 +42,18 @@ func main() {
 				fmt.Fprintf(os.Stderr, "aws login 실패: %v\n", err)
 			}
 		case ui.Connect:
-			fmt.Printf("\n%s (%s) 터널을 엽니다.\n접속 주소: %s\n종료하려면 Ctrl+C 를 누르세요.\n\n",
-				res.Instance.Name, res.Instance.ID, res.URL)
-			if err := runInteractive(aws.PortForwardCmd(res.Profile, res.Instance.ID, res.Remote, res.Local)); err != nil {
+			local, err := aws.FreePort()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "로컬 포트를 잡지 못했습니다: %v\n", err)
+				continue
+			}
+			url := fmt.Sprintf("localhost:%d", local)
+			if res.Scheme != "" {
+				url = fmt.Sprintf("%s://localhost:%d%s", res.Scheme, local, res.Path)
+			}
+			fmt.Printf("\n%s (%s) 터널을 엽니다.\n원격 %d → 로컬 %d\n접속 주소: %s\n종료하려면 Ctrl+C 를 누르세요.\n\n",
+				res.Instance.Name, res.Instance.ID, res.Remote, local, url)
+			if err := runInteractive(aws.PortForwardCmd(res.Profile, res.Instance.ID, res.Remote, local)); err != nil {
 				fmt.Fprintf(os.Stderr, "세션 종료: %v\n", err)
 			}
 		}

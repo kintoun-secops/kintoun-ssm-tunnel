@@ -1,23 +1,20 @@
 package ui
 
-import (
-	"fmt"
-	"strings"
-)
+import "strings"
 
 type Preset struct {
 	Match  string
 	Remote int
-	Local  int
 	Scheme string
 	Path   string
 }
 
-// presets follow the ports in the kintoun-infra runbooks.
+// presets follow the ports in the kintoun-infra runbooks. The local port is picked at
+// connect time, so presets only fix the remote port and how to build the URL.
 var presets = []Preset{
-	{Match: "kali", Remote: 6080, Local: 6080, Scheme: "http", Path: "/vnc.html"},
-	{Match: "wazuh", Remote: 443, Local: 56789, Scheme: "https"},
-	{Match: "velociraptor", Remote: 8889, Local: 8889, Scheme: "https"},
+	{Match: "kali", Remote: 6080, Scheme: "http", Path: "/vnc.html"},
+	{Match: "wazuh", Remote: 443, Scheme: "https"},
+	{Match: "velociraptor", Remote: 8889, Scheme: "https"},
 }
 
 func findPreset(name string) (Preset, bool) {
@@ -28,8 +25,4 @@ func findPreset(name string) (Preset, bool) {
 		}
 	}
 	return Preset{}, false
-}
-
-func (p Preset) URL() string {
-	return fmt.Sprintf("%s://localhost:%d%s", p.Scheme, p.Local, p.Path)
 }
